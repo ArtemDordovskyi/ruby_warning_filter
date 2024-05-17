@@ -81,6 +81,6 @@ class RubyWarningFilter < DelegateClass(IO)
   end
 
   def eval_redefined?(line)
-    line =~ /\(eval\):\d+: warning: previous definition of .+ was here/
+    line =~ /\(eval\):\d+: (warning: previous definition of .+ was here|warning: method redefined; .+)/
   end
 end
