@@ -5,7 +5,7 @@ require "minitest/autorun"
 require "stringio"
 STDOUT.sync = true
 
-class RubyWarningsFilterTest < MiniTest::Test
+class RubyWarningsFilterTest < Minitest::Test
   def setup
     @gems_dir = File.expand_path("../gems", __FILE__)
     @gems_link_dir = File.expand_path("../gems-link", __FILE__)
@@ -73,7 +73,7 @@ class RubyWarningsFilterTest < MiniTest::Test
       "(eval):2: warning: previous definition of foo was here\n"\
       "something other\n",
       @err.string
-    
+
     assert_equal 2, @err.ruby_warnings
   end
 
@@ -85,6 +85,23 @@ class RubyWarningsFilterTest < MiniTest::Test
     @err.write "/path/to/app/template.html.slim:2: warning: assigned but unused variable - foo\n"
     assert_equal "/path/to/app/template.html.slim:2: warning: assigned but unused variable - foo\n",
       @err.string
+    assert_equal 1, @err.ruby_warnings
+  end
+
+  def test_internal_warning
+    # in gem
+    @err.write "<internal:/path/to/ruby/2.2.0/rubygems/core_ext/kernel_require.rb>:319: warning: loading in progress, circular require considered harmful - /path/to/ruby/2.2.0/gems/bugsnag-6.26.3/lib/bugsnag.rb\n"
+
+    # in app
+    @err.write "<internal:/path/to/ruby/2.2.0/rubygems/core_ext/kernel_require.rb>:319: warning: loading in progress, circular require considered harmful - /path/to/app.rb\n"
+
+    @err.write "something other\n"
+
+    assert_equal \
+      "<internal:/path/to/ruby/2.2.0/rubygems/core_ext/kernel_require.rb>:319: warning: loading in progress, circular require considered harmful - /path/to/app.rb\n"\
+        "something other\n",
+      @err.string
+
     assert_equal 1, @err.ruby_warnings
   end
 end
