@@ -5,7 +5,7 @@ require "minitest/autorun"
 require "stringio"
 STDOUT.sync = true
 
-class RubyWarningsFilterTest < MiniTest::Test
+class RubyWarningsFilterTest < Minitest::Test
   def setup
     @gems_dir = File.expand_path("../gems", __FILE__)
     @gems_link_dir = File.expand_path("../gems-link", __FILE__)
@@ -62,19 +62,25 @@ class RubyWarningsFilterTest < MiniTest::Test
     @err.write "/path/to/ruby/2.2.0/gems/compass-core-1.0.3/lib/gradient_support.rb:319: warning: method redefined; discarding old to_moz\n"
     @err.write "(eval):2: warning: previous definition of to_moz was here\n"
 
+    @err.write "/path/to/ruby/2.2.0/gems/sitemap_generator-6.3.0/lib/sitemap_generator/templates.rb:10: warning: method redefined; discarding old sitemap_sample\n"
+    @err.write "(eval):1: warning: method redefined; discarding old sitemap_sample\n"
+
     # in app
     @err.write "/path/to/app.rb:123: warning: method redefined; discarding old foo\n"
     @err.write "(eval):2: warning: previous definition of foo was here\n"
+
+    @err.write "(eval):1: warning: method redefined; discarding old sitemap_sample\n"
 
     @err.write "something other\n"
 
     assert_equal \
       "/path/to/app.rb:123: warning: method redefined; discarding old foo\n"\
       "(eval):2: warning: previous definition of foo was here\n"\
+      "(eval):1: warning: method redefined; discarding old sitemap_sample\n"\
       "something other\n",
       @err.string
-    
-    assert_equal 2, @err.ruby_warnings
+
+    assert_equal 3, @err.ruby_warnings
   end
 
   def test_template_warning
