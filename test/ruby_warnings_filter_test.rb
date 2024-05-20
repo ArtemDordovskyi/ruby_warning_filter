@@ -93,4 +93,21 @@ class RubyWarningsFilterTest < Minitest::Test
       @err.string
     assert_equal 1, @err.ruby_warnings
   end
+
+  def test_internal_warning
+    # in gem
+    @err.write "<internal:/path/to/ruby/2.2.0/rubygems/core_ext/kernel_require.rb>:319: warning: loading in progress, circular require considered harmful - /path/to/ruby/2.2.0/gems/bugsnag-6.26.3/lib/bugsnag.rb\n"
+
+    # in app
+    @err.write "<internal:/path/to/ruby/2.2.0/rubygems/core_ext/kernel_require.rb>:319: warning: loading in progress, circular require considered harmful - /path/to/app.rb\n"
+
+    @err.write "something other\n"
+
+    assert_equal \
+      "<internal:/path/to/ruby/2.2.0/rubygems/core_ext/kernel_require.rb>:319: warning: loading in progress, circular require considered harmful - /path/to/app.rb\n"\
+        "something other\n",
+      @err.string
+
+    assert_equal 1, @err.ruby_warnings
+  end
 end

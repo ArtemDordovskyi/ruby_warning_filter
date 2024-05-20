@@ -63,11 +63,27 @@ class RubyWarningFilter < DelegateClass(IO)
   end
 
   def ignored_warning?(line)
-    external_warning?(line) || ignored_template_warning?(line)
+    external_warning?(line) ||
+      ignored_template_warning?(line) ||
+      internal_warning?(line)
   end
 
   def external_warning?(line)
     @ignore_path.any?{ |path| line.start_with?(path) }
+  end
+
+  # Since bundler 2.4.6 there are some changes
+  # before:
+  # /home/user/.rbenv/gems/ruby-3.1.5/gems/bootsnap-1.13.0/lib/bootsnap/load_path_cache/core_ext/kernel_require.rb:32
+  # warning: /home/user/.rbenv/gems/ruby-3.1.5/gems/bootsnap-1.13.0/lib/bootsnap/load_path_cache/core_ext/kernel_require.rb:32:
+  # warning: loading in progress, circular require considered harmful - /home/user/.rbenv/gems/ruby-3.1.5/gems/bugsnag-6.26.3/lib/bugsnag.rb
+  # after:
+  # <internal:/home/user/.rbenv/rubies/ruby-3.1.5/lib/ruby/site_ruby/3.1.0/rubygems/core_ext/kernel_require.rb>:37:
+  # warning: <internal:/home/user/.rbenv/rubies/ruby-3.1.5/lib/ruby/site_ruby/3.1.0/rubygems/core_ext/kernel_require.rb>:37:
+  # warning: loading in progress, circular require considered harmful - /home/user/.rbenv/gems/ruby-3.1.5/gems/bugsnag-6.26.3/lib/bugsnag.rb
+  def internal_warning?(line)
+    gem_path = line.split(/\n/).first.split(' ').last
+    @ignore_path.any?{ |path| line.start_with?('<internal:') && gem_path.start_with?(path) }
   end
 
   # Variables used in tag attributes (Slim) always cause a warning.
